@@ -1,36 +1,3 @@
-<script>
-function goLogin(){
-  localStorage.clear();
-  sessionStorage.clear();
-  location.replace("https://www.prudle-education.com/log-in-out");
-}
-
-function getRoles(){
-  let roles=[];
-  try{
-    const saved=JSON.parse(localStorage.getItem("roles")||"[]");
-    if(Array.isArray(saved)) roles=saved;
-  }catch(e){}
-  const old=String(localStorage.getItem("role")||localStorage.getItem("userRole")||"").trim();
-  if(old) roles.push(old);
-  return [...new Set(roles.map(r=>String(r||"").trim().toLowerCase()).filter(Boolean))];
-}
-
-function checkTrainerAccess(){
-  const user=localStorage.getItem("username");
-  const roles=getRoles();
-  const last=localStorage.getItem("loginDate");
-  const today=new Date().toDateString();
-  if(!user || !roles.includes("trainer") || last!==today){
-    goLogin();
-    return false;
-  }
-  return true;
-}
-if(!checkTrainerAccess()) throw new Error("Access Denied");
-window.addEventListener("pageshow",()=>checkTrainerAccess());
-</script>
-
 <!DOCTYPE html>
 <html lang="ar">
 <head>
