@@ -165,8 +165,45 @@ firebase.initializeApp({
   projectId:"prudle-system"
 });
 const db=firebase.firestore();
-const user=localStorage.getItem("username");
-userBox.innerText="Trainer: "+user;
+let user=String(localStorage.getItem("username")||"").trim();
+let coursesUnsub=null;
+
+function setTrainerUser(username){
+  user=String(username||"").trim();
+  userBox.innerText=user ? "Trainer: "+user : "Trainer: --";
+  if(user) loadTrainerCourses();
+}
+
+function loadTrainerCourses(){
+  if(!user)return;
+  if(coursesUnsub){try{coursesUnsub()}catch(e){}}
+
+  courseSelect.innerHTML='<option value="">Loading courses...</option>';
+
+  coursesUnsub=db.collection("Courses")
+    .where("Trainer","==",user)
+    .onSnapshot(s=>{
+      courseSelect.innerHTML='<option value="">Select Course</option>';
+      let count=0;
+      s.forEach(doc=>{
+        const c=doc.data();
+        if(String(c.status||"").trim().toLowerCase()==="closed")return;
+        count++;
+        courseSelect.innerHTML+=`
+          <option value="${doc.id}">
+            ${c.TrainingCourse||c.CourseName||c.Level||"Course"} - ${c.Period||""}
+          </option>`;
+      });
+      if(!count){
+        courseSelect.innerHTML='<option value="">No open courses found</option>';
+      }
+    },err=>{
+      console.error("Courses load error:",err);
+      courseSelect.innerHTML='<option value="">Unable to load courses</option>';
+    });
+}
+
+setTrainerUser(user);
 
 let dayDoc=null, breakMinutes=10, timerInt=null, dayUnsub=null;
 let selectedCourse=null;
@@ -285,14 +322,46 @@ db.collection("BreakSettings").doc("GlobalSettings").onSnapshot(d=>{
   if(d.exists) breakMinutes=d.data().duration||10;
 });
 
-db.collection("Courses").where("Trainer","==",user).onSnapshot(s=>{
-  courseSelect.innerHTML='<option value="">Select Course</option>';
-  s.forEach(doc=>{
-    const c=doc.data();
-    if(String(c.status||"").toLowerCase()==="closed") return;
-    courseSelect.innerHTML+=`<option value="${doc.id}">${c.TrainingCourse||c.CourseName||c.Level||"Course"} - ${c.Period||""}</option>`;
-  });
+
+
+
+/* Receive trainer identity from prudle-education.com parent page */
+window.addEventListener("message",function(e){
+  if(e.origin!=="https://www.prudle-education.com")return;
+
+  const data=e.data;
+  if(!data || typeof data!=="object")return;
+
+  if(
+    data.type==="PRUDLE_USER_INFO" ||
+    data.type==="PRUDLE_USER_CONTEXT" ||
+    data.type==="PRUDLE_AUTH"
+  ){
+    const incoming=String(
+      data.username ||
+      data.assignedBy ||
+      data.user ||
+      ""
+    ).trim();
+
+    if(incoming){
+      setTrainerUser(incoming);
+    }
+  }
 });
+
+/* Ask the parent for the trainer identity after the iframe is ready */
+function requestPrudleUser(){
+  if(window.parent && window.parent!==window){
+    window.parent.postMessage(
+      {type:"PRUDLE_REQUEST_USER_INFO"},
+      "https://www.prudle-education.com"
+    );
+  }
+}
+requestPrudleUser();
+setTimeout(requestPrudleUser,250);
+setTimeout(requestPrudleUser,800);
 
 courseSelect.onchange=async()=>{
   attendanceArea.innerHTML="";
