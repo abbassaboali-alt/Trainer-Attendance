@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="ar" class="prudle-auth-pending">
+<head>
+<script>
+/* Prudle host allowlist + save-shortcut deterrent. Server-side Worker checks are authoritative. */
+(function(){
+"use strict";
+const LOGIN="https://www.prudle-education.com/log-in-out";
+const allowed=new Set(["www.prudle-education.com","prudle-education.com","abbassaboali-alt.github.io"]);
+window.addEventListener("keydown",function(e){if((e.ctrlKey||e.metaKey)&&String(e.key).toLowerCase()==="s")e.preventDefault();},{capture:true});
+const isDev=location.hostname==="localhost"||location.hostname==="127.0.0.1"||location.hostname.endsWith(".run.app");
+if(!isDev&&(location.protocol!=="https:"||!allowed.has(location.hostname.toLowerCase()))){
+  window.stop();try{document.documentElement.innerHTML="";}catch(e){}
+  location.replace(LOGIN);return;
+}
+if(location.hostname.toLowerCase()==="prudle-education.com"){
+  window.stop();location.replace("https://www.prudle-education.com"+location.pathname+location.search+location.hash);
+}
+})();
+</script>
+<style>html.prudle-auth-pending body{visibility:hidden!important}</style>
+<meta charset="UTF-8">
+<title>Trainer Attendance</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Prudle Education Trainer Attendance tracking system with secure Cloudflare Worker integration.">
+<meta property="og:title" content="Trainer Attendance">
+<meta property="og:description" content="Prudle Education Trainer Attendance tracking system with secure Cloudflare Worker integration.">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <script type="module" crossorigin src="./assets/index-euUBNhqV.js"></script>
+  <link rel="stylesheet" crossorigin href="./assets/index-CU0vL1Yf.css">
+</head>
+<body>
+<div id="root"></div>
+</body>
+</html>
